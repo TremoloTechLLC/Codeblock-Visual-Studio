@@ -7,6 +7,24 @@ from PyQt5.QtGui import QPainter, QFont, QColor, QImage, QFontMetrics
 import time
 
 blocks = []
+
+
+class SnapArea(QWidget):
+    def __init__(self, block, snap_value, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.block = block
+        self.setGeometry(self.block.geometry())
+        self.setFixedHeight(60 * snap_value)
+
+        if type(block) is CodeBlock:
+            #CodeBlocks use block hints both above and below, unlike other blocks
+            pass
+        elif type(block) is ControlBlockTop:
+            #Control block uses indented blocks
+            pass
+
+
 class BasicBlock(QWidget):
     def __init__(self, content='print("Hello, World")', *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -135,6 +153,7 @@ class BasicBlock(QWidget):
             self.child.raiseEvent()
             self.raise_()
             self.child.show()
+
 
 class CodeBlock(BasicBlock):
     def __init__(self, text, *args, **kwargs):
