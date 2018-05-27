@@ -8,23 +8,6 @@ import time
 
 blocks = []
 
-
-class SnapArea(QWidget):
-    def __init__(self, block, snap_value, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.block = block
-        self.setGeometry(self.block.geometry())
-        self.setFixedHeight(60 * snap_value)
-
-        if type(block) is CodeBlock:
-            #CodeBlocks use block hints both above and below, unlike other blocks
-            pass
-        elif type(block) is ControlBlockTop:
-            #Control block uses indented blocks
-            pass
-
-
 class BasicBlock(QWidget):
     def __init__(self, content='print("Hello, World")', *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -102,7 +85,6 @@ class BasicBlock(QWidget):
     def detach_parent(self):
         if self.parent is None:
             return
-
         self.parent.child = None
         self.parent = None
 
@@ -121,7 +103,12 @@ class BasicBlock(QWidget):
     def mousePressEvent(self, event):
         self.dragging = self.mapToGlobal(event.pos())
         self.drag_geom = (self.pos())
-        self.raiseEvent()
+
+        click_pos = event.pos()
+        if click_pos.y() in range(0, self.height):
+            self.raiseEvent()
+        else:
+            self.dragging = -10
 
     def move_recurse(self, x, y):
         self.move_to(x, y)
@@ -132,6 +119,7 @@ class BasicBlock(QWidget):
         if self.dragging == -10:
             return
 
+        print(self.dragging)
         pos = self.mapToGlobal(event.pos() - self.dragging)
         deltax = abs(self.geometry().x() - self.drag_geom.x())
         deltay = abs(self.geometry().y() - self.drag_geom.y())
@@ -174,6 +162,7 @@ class CodeBlock(BasicBlock):
         self.repaint()
 
     def paintEvent(self, QPaintEvent):
+        geom = self.geometry()
         painter = QPainter()
         painter.begin(self)
         painter.setPen(QColor(self.color))
@@ -182,7 +171,6 @@ class CodeBlock(BasicBlock):
         painter.setRenderHint(QPainter.Antialiasing)
         #painter.drawRoundedRect(0, 5, self.geometry().width() - 5, self.geometry().height() - 7, 3, 3)
         painter.drawChord(QRect(20, 9, 45, 45), 180 * 16, 180 * 16)
-        geom = self.geometry()
         painter.drawRoundedRect(QRect(0, 0, geom.width(), geom.height() - 15), 3, 3)
         painter.setBrush(QColor("white"))
         painter.setPen(QColor("white"))
