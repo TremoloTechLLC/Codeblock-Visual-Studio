@@ -96,6 +96,9 @@ class BasicBlock(QWidget):
         self.parent.child = None
         self.parent = None
 
+    def set_color(self, color):
+        self.color = color
+
     def paintEvent(self, QPaintEvent):
         painter = QPainter()
         painter.begin(self)
