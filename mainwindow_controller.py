@@ -7,6 +7,7 @@ import icons.icons_rc
 import sys
 import importlib.util
 import inspect
+import threading
 import error_catcher
 from modulefinder import ModuleFinder
 from blocks import *
