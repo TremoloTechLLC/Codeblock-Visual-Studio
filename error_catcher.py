@@ -5,6 +5,7 @@ from io import StringIO
 import re
 
 class Errors:
+    # Contains all error codes as well as special error messages for certain codes
     F402 = "F402"
     F403 = "F403"
     F404 = "F404"
@@ -17,10 +18,11 @@ class Errors:
 
     supported = [F402, F403, F404, F405, F406, F407, F8, F901, E999]
     msg = {
-            F403: "Package not installed or is unavailable.",
-            F405: "{} is undefined."
+            F403: "F403 Package not installed or is unavailable.",
+            F405: "F405 {} is undefined."
         }
 
+# Define some regex expressions for matching errors and location
 get_error = re.compile("[FE]\d{1,3}")
 get_loc = re.compile("\w+.py:\d+:\d+:")
 
@@ -42,6 +44,7 @@ def get_lint(file):
     errors_to_return = {}
     warnings_to_return = {}
     verified_packages = []
+    # Add containing directory to PYTHONPATH
     sys.path.append("/".join(file.split("/")[:-1]))
     for i in lint.split("\n"):
         """print(i)
@@ -56,25 +59,33 @@ def get_lint(file):
                                             "F901",
                                             "E999"]):"""
         try:
+            # Match error to regex pattern
             matched_error = re.match(get_error, i)
             if matched_error != None:
+                # Get matched error code from regex object, as well as location of error
                 error_code = matched_error.group(0)
                 error_loc = re.match(get_loc, i)
+                # Verify star import (warning by F403)
                 if error_code == Errors.F403:
                     if not scan_import(i):
+                        # Package doesn't exist
                         error_msg = "{}: {}".format(error_loc, Errors.msg[error_code])
-                        i = ":".join(i.split(":")[:3]) + ": F403 Package not installed or is unavailable."
+                        i = error_msg
                     else:
+                        # Add package as verified
                         verified_packages.append(i.split("'")[1].split()[1])
                         continue
+                # If F405 is thrown, check if object is in a verified import
                 elif error_code == Errors.F405:
                     if any(pkg in verified_packages for pkg in i.split(":")[-1][1:].split(", ")):
                         continue
                     else:
-                        i = ":".join(i.split(":")[:3]) + ": F405 '" + i.split("'")[1] + "'" + "is undefined."
+                        error_msg = "{}: {}".format(error_loc, Errors.msg[error_code])
+                        i = error_msg
                 i = "E: " + i
                 errors_to_return[i] = int(i.split(":")[2])
             else:
+                # Add as warning
                 i = "W: " + i
                 warnings_to_return[i] = int(i.split(":")[2])
         except IndexError:
