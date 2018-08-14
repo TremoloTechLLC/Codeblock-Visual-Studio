@@ -90,6 +90,9 @@ class Main(MainWindow):
         except UnicodeDecodeError:
             self.source_warning.show()
             return 0
+        except KeyError:
+            self.source_warning.show()
+            return 0
 
         if len(self.lines) > 2000:
             self.size_warning.exec_()
