@@ -24,9 +24,10 @@ class Errors:
         }
 
 # Define some regex expressions for matching errors and location
-get_error = re.compile("[FE]\d{1,3}")
+get_error = re.compile("[FEWC]\d{1,3}")
 get_loc = re.compile("\w+.py:\d+:\d+:")
 
+# Get lint using async
 def ret_lint(file):
     # Temporarily redirect stdout to the lintstdout variable to get flake8 output
     oldstdout = sys.stdout
@@ -47,7 +48,6 @@ def ret_lint(file):
 
 
 def get_lint(file_name):
-    print(file_name)
     errors_to_return = {}
     warnings_to_return = {}
     verified_packages = []
@@ -55,17 +55,17 @@ def get_lint(file_name):
     sys.path.append(file_name.rstrip("/"))
     for i in ret_lint(file_name):
         try:
-            matched_error = re.match(get_error, i)  # try to match the lint line with an error marker
-            if matched_error != None:  # is this lint an error?
-                error_code = matched_error.group(0)
+            matched_error = re.search(get_error, i)  # try to match the lint line with an error marker
+            if matched_error != None and \
+                    matched_error.group() in Errors.supported:  # is this lint an error?
+                error_code = matched_error.group()
                 error_loc = re.match(get_loc, i)
                 # Verify star import (warning by F403)
                 if error_code == Errors.F403:
                     if not scan_import(i):
                         # Package doesn't exist
                         error_msg = "{}: {}".format(error_loc, Errors.msg[error_code])
-                        i = err_msg
-                        # i = ":".join(i.split(":")[:3]) + ": F403 Package not installed or is unavailable."
+                        i = error_msg
                     else:
                         # Add package as verified
                         verified_packages.append(i.split("'")[1].split()[1])
@@ -103,5 +103,5 @@ def scan_import(line):
 
 
 if __name__ == "__main__":
-    # print(get_lint("./mainwindow_controller.py"))
-    cProfile.run('get_lint("./icons_rc.py")')
+    print(get_lint("./mainwindow.py"))
+    # cProfile.run('get_lint("./icons_rc.py")')
