@@ -3,6 +3,7 @@ import importlib
 import flake8.api.legacy
 from io import StringIO
 import re
+import cProfile
 
 class Errors:
     F402 = "F402"
@@ -59,7 +60,8 @@ def get_lint(file_name):
                 if error_code == Errors.F403:
                     if not scan_import(i):
                         error_msg = "{}: {}".format(error_loc, Errors.msg[error_code])
-                        i = ":".join(i.split(":")[:3]) + ": F403 Package not installed or is unavailable."
+                        i = err_msg
+                        # i = ":".join(i.split(":")[:3]) + ": F403 Package not installed or is unavailable."
                     else:
                         verified_packages.append(i.split("'")[1].split()[1])
                         continue
@@ -93,4 +95,5 @@ def scan_import(line):
 
 
 if __name__ == "__main__":
-    print(get_lint("./mainwindow_controller.py"))
+    # print(get_lint("./mainwindow_controller.py"))
+    cProfile.run('get_lint("./icons_rc.py")')
